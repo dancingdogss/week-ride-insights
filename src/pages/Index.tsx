@@ -3,13 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -20,36 +13,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Download, Plus, Trash2, Upload } from "lucide-react";
+import { Download, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { CONFIG, ZiData, clearZile, loadZile, saveZile } from "@/lib/weekStorage";
-import { ZiForm } from "@/components/ZiForm";
-import { ZileList } from "@/components/ZileList";
+import { SaptamanaTable } from "@/components/SaptamanaTable";
 import { Dashboard } from "@/components/Dashboard";
 
 const Index = () => {
   const [zile, setZile] = useState<ZiData[]>([]);
-  const [adding, setAdding] = useState(false);
-  const [editing, setEditing] = useState<ZiData | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setZile(loadZile()); }, []);
   useEffect(() => { saveZile(zile); }, [zile]);
-
-  function upsert(z: ZiData) {
-    setZile((prev) => {
-      const exists = prev.some((p) => p.id === z.id);
-      return exists ? prev.map((p) => (p.id === z.id ? z : p)) : [...prev, z];
-    });
-    setAdding(false);
-    setEditing(null);
-    toast.success("Zi salvată.");
-  }
-
-  function del(id: string) {
-    setZile((prev) => prev.filter((p) => p.id !== id));
-    toast.success("Zi ștearsă.");
-  }
 
   function exportJson() {
     const blob = new Blob([JSON.stringify(zile, null, 2)], { type: "application/json" });
@@ -109,31 +84,16 @@ const Index = () => {
           <p className="mt-1">Combustibilul este introdus manual. Kilometrii până la client sunt estimați la 1,5 km pentru fiecare cursă.</p>
         </div>
 
-        <Tabs defaultValue="dashboard">
+        <Tabs defaultValue="tabel">
           <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="tabel">Tabel săptămână</TabsTrigger>
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="zile">Zile ({zile.length})</TabsTrigger>
           </TabsList>
+          <TabsContent value="tabel" className="mt-4">
+            <SaptamanaTable zile={zile} onChange={setZile} />
+          </TabsContent>
           <TabsContent value="dashboard" className="mt-4">
             <Dashboard zile={zile} />
-          </TabsContent>
-          <TabsContent value="zile" className="mt-4 space-y-3">
-            <Dialog open={adding || !!editing} onOpenChange={(o) => { if (!o) { setAdding(false); setEditing(null); } }}>
-              <DialogTrigger asChild>
-                <Button className="w-full" onClick={() => setAdding(true)}>
-                  <Plus className="mr-2 h-4 w-4" /> Adaugă zi
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-h-[90vh] overflow-y-auto">
-                <DialogHeader><DialogTitle>{editing ? "Editează zi" : "Adaugă zi"}</DialogTitle></DialogHeader>
-                <ZiForm
-                  initial={editing ?? undefined}
-                  onSave={upsert}
-                  onCancel={() => { setAdding(false); setEditing(null); }}
-                />
-              </DialogContent>
-            </Dialog>
-            <ZileList zile={zile} onEdit={(z) => setEditing(z)} onDelete={del} />
           </TabsContent>
         </Tabs>
 
