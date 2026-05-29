@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Eraser } from "lucide-react";
+import { ScreenshotApplyData, ScreenshotUpload } from "@/components/ScreenshotUpload";
 import { CONFIG, Platforma, Sursa, ZiData, calculZi, lei } from "@/lib/weekStorage";
 
 function datesOfWeek(): string[] {
@@ -65,6 +66,18 @@ export function SaptamanaTable({ zile, onChange }: Props) {
     onChange(zile.filter((z) => z.id !== row.id));
   }
 
+  function applyScreenshotData(draft: ScreenshotApplyData) {
+    const row = rows.find((item) => item.data === draft.data) ?? makeBlank(draft.data);
+    update(row, {
+      platforma: draft.platforma,
+      brut: draft.brut,
+      curse: draft.curse,
+      ore: draft.ore,
+      sursa: "Screenshot",
+      observatii: draft.observatii,
+    });
+  }
+
   const num = (v: number | undefined) => (v === undefined || v === 0 ? "" : String(v));
   const parseNum = (s: string) => {
     const n = Number(s.replace(",", "."));
@@ -73,8 +86,10 @@ export function SaptamanaTable({ zile, onChange }: Props) {
 
   return (
     <div className="space-y-3">
+      <ScreenshotUpload dates={dates} zile={zile} onApply={applyScreenshotData} />
+
       <div className="rounded-md border-l-4 border-accent bg-accent/10 p-3 text-xs sm:text-sm">
-        Deocamdată, introdu valorile manual din screenshot-urile tale. Citirea automată a screenshot-urilor va fi adăugată mai târziu.
+        Poți corecta oricând valorile manual. OCR-ul este doar un ajutor pentru completarea datelor din screenshot-uri.
       </div>
 
       {/* Mobile: cards */}
