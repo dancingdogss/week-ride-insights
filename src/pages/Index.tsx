@@ -15,15 +15,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Download, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { CONFIG, ZiData, clearZile, loadZile, saveZile } from "@/lib/weekStorage";
+import { CONFIG, ZiData, clearZile, loadZile, parseZile, saveZile } from "@/lib/weekStorage";
 import { SaptamanaTable } from "@/components/SaptamanaTable";
 import { Dashboard } from "@/components/Dashboard";
 
 const Index = () => {
-  const [zile, setZile] = useState<ZiData[]>([]);
+  const [zile, setZile] = useState<ZiData[]>(() => loadZile());
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setZile(loadZile()); }, []);
   useEffect(() => { saveZile(zile); }, [zile]);
 
   function exportJson() {
@@ -41,8 +40,9 @@ const Index = () => {
     r.onload = () => {
       try {
         const parsed = JSON.parse(String(r.result));
-        if (!Array.isArray(parsed)) throw new Error();
-        setZile(parsed);
+        const zileImportate = parseZile(parsed);
+        if (!zileImportate) throw new Error();
+        setZile(zileImportate);
         toast.success("Date importate.");
       } catch {
         toast.error("Fișier JSON invalid.");

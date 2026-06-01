@@ -16,11 +16,14 @@ import { CONFIG, Platforma, Sursa, ZiData, calculZi, lei } from "@/lib/weekStora
 
 function datesOfWeek(): string[] {
   const out: string[] = [];
-  const start = new Date(CONFIG.weekStart + "T00:00:00");
+  const [year, month, day] = CONFIG.weekStart.split("-").map(Number);
+  const start = new Date(year, month - 1, day);
   for (let i = 0; i < 7; i++) {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
-    out.push(d.toISOString().slice(0, 10));
+    out.push(
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+    );
   }
   return out;
 }
@@ -42,7 +45,8 @@ function makeBlank(data: string): ZiData {
 
 const WEEKDAYS = ["Dum", "Lun", "Mar", "Mie", "Joi", "Vin", "Sâm"];
 function ziLabel(d: string) {
-  const dt = new Date(d + "T00:00:00");
+  const [year, month, day] = d.split("-").map(Number);
+  const dt = new Date(year, month - 1, day);
   return `${WEEKDAYS[dt.getDay()]} ${dt.getDate()}.${(dt.getMonth() + 1).toString().padStart(2, "0")}`;
 }
 
