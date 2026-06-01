@@ -208,6 +208,55 @@ describe("garbled / empty OCR text", () => {
   });
 });
 
+// ─── OCR artifact sanitisation ────────────────────────────────────────────────
+
+describe("OCR artifact sanitisation (via parseScreenshotText)", () => {
+  it("handles smart quotes in OCR output without breaking parsing", () => {
+    // ‘ left single quote, ’ right single quote around platform name
+    const r = parseScreenshotText(
+      "Uber Driver\nVenit total incasari’s 245,63 lei\nCurse efectuate 14\nTimp online 6h 30min\n10 mai 2026",
+    );
+    expect(r.brut.value).toBe(245.63);
+  });
+
+  it("handles pipe-as-1 in a number (e.g. '24|5,50 lei')", () => {
+    // After sanitisation '24|5,50' becomes '2415,50' which exceeds 3000 → none
+    // This asserts the pipe is not silently ignored but properly replaced.
+    const r = parseScreenshotText(
+      "Uber Driver App\nCastig total 24|5,50 lei\nCurse efectuate 12\nTimp online 5h 00min\n10 mai 2026",
+    );
+    // 2415.5 > maxGrossPerDay=3000 is actually ≤ 3000, so value present and correct
+    expect(r.brut.value).toBe(2415.5);
+  });
+
+  it("strips zero-width chars without corrupting nearby values", () => {
+    const zwsp = "​";
+    const r = parseScreenshotText(
+      `Uber\nCastig total incasari${zwsp} 245,63 lei\nCurse 14\nOnline 6h 30min\n10 mai 2026`,
+    );
+    expect(r.brut.value).toBe(245.63);
+    expect(r.platforma.value).toBe("Uber");
+  });
+});
+
+// ─── Hours no-space fix ───────────────────────────────────────────────────────
+
+describe("hours parsing – no-space compact format", () => {
+  it("parses '6h30min' (no space) as 6.5", () => {
+    const r = parseScreenshotText(
+      "Uber Driver\nCastig total incasari 200 lei\nCurse 10\nOnline 6h30min\n10 mai 2026",
+    );
+    expect(r.ore.value).toBeCloseTo(6.5);
+  });
+
+  it("parses '7h45min' (no space) as 7.75", () => {
+    const r = parseScreenshotText(
+      "Bolt Driver\nIncasari 310 RON\nCurse 18\nTimp online 7h45min\n12 mai 2026 Bolt",
+    );
+    expect(r.ore.value).toBeCloseTo(7.75);
+  });
+});
+
 // ─── Full realistic scenarios ─────────────────────────────────────────────────
 
 describe("realistic full screenshots", () => {

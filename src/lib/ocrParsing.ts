@@ -44,10 +44,29 @@ const RIDES_KEYWORDS        = ["curse", "calatorii", "rides", "trips", "comenzi"
 
 // ─── Generic helpers ──────────────────────────────────────────────────────────
 
+/**
+ * Fixes common OCR substitution artifacts before any parsing takes place:
+ * - Smart/curly quotes → straight apostrophe / quote
+ * - Typographic ligatures (fi, fl) → plain ASCII
+ * - Pipe character between digits → digit 1 (e.g. "24|5" → "2415")
+ * - Zero-width / BOM characters stripped
+ * - Degree symbol that OCR sometimes places near digit separators
+ */
+function sanitizeOcr(text: string): string {
+  return text
+    .replace(/[‘’ʼ]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/ﬁ/g, "fi")
+    .replace(/ﬂ/g, "fl")
+    .replace(/(?<=\d)\|(?=\d)/g, "1")
+    .replace(/[​‌‍﻿]/g, "")
+    .replace(/°/g, "");
+}
+
 function normalize(text: string): string {
   return text
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase();
 }
 
@@ -161,7 +180,9 @@ function findGross(lines: string[]): ExtractedField<number> {
 // Rule: only explicit time patterns. Reject > 24. Never grab a random number.
 
 function parseHoursValue(text: string): { value: number; explicit: boolean } | undefined {
-  const hMin = text.match(/(\d+(?:[,.]\d+)?)\s*(?:h\b|ore|hours?)\s*(?:(\d+)\s*(?:m\b|min|minute))?/);
+  // Matches "6h 30min", "6h30min", "6 ore 30 min", "6,5h", "6hours30min" etc.
+  // ore/hours? are checked before bare h so "hours" is consumed whole, not just "h".
+  const hMin = text.match(/(\d+(?:[,.]\d+)?)\s*(?:ore|hours?|h)\s*(?:(\d+)\s*(?:m\b|min|minute))?/);
   if (hMin) {
     const hours   = parseNumber(hMin[1]) ?? 0;
     const minutes = hMin[2] ? Number(hMin[2]) / 60 : 0;
@@ -270,7 +291,8 @@ function findDate(text: string): ExtractedField<string> {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export function parseScreenshotText(text: string): ScreenshotExtract {
+export function parseScreenshotText(rawInput: string): ScreenshotExtract {
+  const text    = sanitizeOcr(rawInput);
   const trimmed = text.trim();
 
   const rawTextQuality: ScreenshotExtract["rawTextQuality"] =
