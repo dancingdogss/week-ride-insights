@@ -28,18 +28,63 @@ export const CONFIG = {
 
 const KEY = "analiza-saptamana-uber-bolt-v1";
 
+const PLATFORME: Platforma[] = ["Uber", "Bolt"];
+const SURSE: Sursa[] = ["Manual", "Poză", "Screenshot"];
+
+/** Validates and coerces one unknown record into a safe ZiData, or null if unusable. */
+function sanitizeZi(raw: unknown): ZiData | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+
+  if (typeof r.data !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(r.data)) return null;
+
+  const numOrZero = (v: unknown) => {
+    const n = typeof v === "number" ? v : Number(v);
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  };
+  const optNum = (v: unknown) => {
+    if (v === undefined || v === null || v === "") return undefined;
+    const n = typeof v === "number" ? v : Number(v);
+    return Number.isFinite(n) && n >= 0 ? n : undefined;
+  };
+
+  return {
+    id:          typeof r.id === "string" && r.id ? r.id : r.data,
+    data:        r.data,
+    platforma:   PLATFORME.includes(r.platforma as Platforma) ? (r.platforma as Platforma) : "Uber",
+    brut:        numOrZero(r.brut),
+    curse:       numOrZero(r.curse),
+    ore:         numOrZero(r.ore),
+    km:          optNum(r.km),
+    combustibil: numOrZero(r.combustibil),
+    observatii:  typeof r.observatii === "string" ? r.observatii : undefined,
+    sursa:       SURSE.includes(r.sursa as Sursa) ? (r.sursa as Sursa) : "Manual",
+  };
+}
+
+export function parseZile(raw: unknown): ZiData[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(sanitizeZi).filter((z): z is ZiData => z !== null);
+}
+
 export function loadZile(): ZiData[] {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return [];
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parseZile(parsed);
   } catch {
     return [];
   }
 }
 
 export function saveZile(zile: ZiData[]) {
-  localStorage.setItem(KEY, JSON.stringify(zile));
+  try {
+    localStorage.setItem(KEY, JSON.stringify(zile));
+  } catch {
+    // Storage full / disabled (private mode) — fail silently, app stays usable in-memory.
+  }
 }
 
 export function clearZile() {
