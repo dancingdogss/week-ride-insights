@@ -11,8 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Eraser } from "lucide-react";
-import { ScreenshotApplyData, ScreenshotUpload } from "@/components/ScreenshotUpload";
-import { CONFIG, Platforma, Sursa, ZiData, calculZi, lei } from "@/lib/weekStorage";
+import { RideDayApply, RideImport } from "@/components/RideImport";
+import { CONFIG, Platforma, Sursa, ZiData, calculZi, inInterval, lei } from "@/lib/weekStorage";
 
 function datesOfWeek(): string[] {
   const out: string[] = [];
@@ -70,15 +70,17 @@ export function SaptamanaTable({ zile, onChange }: Props) {
     onChange(zile.filter((z) => z.id !== row.id));
   }
 
-  function applyScreenshotData(draft: ScreenshotApplyData) {
-    const row = rows.find((item) => item.data === draft.data) ?? makeBlank(draft.data);
+  function applyRideDay(day: RideDayApply) {
+    // Never write a day outside the configured week (e.g. an OCR'd 2026-05-17).
+    if (!inInterval(day.data)) return;
+    const row = rows.find((item) => item.data === day.data) ?? makeBlank(day.data);
+    // Merge ride-level totals; preserve manually entered hours / km / fuel.
     update(row, {
-      platforma: draft.platforma,
-      brut: draft.brut,
-      curse: draft.curse,
-      ore: draft.ore,
+      platforma: day.platforma,
+      brut: day.brut,
+      curse: day.curse,
       sursa: "Screenshot",
-      observatii: draft.observatii,
+      observatii: day.observatii ?? row.observatii,
     });
   }
 
@@ -90,7 +92,7 @@ export function SaptamanaTable({ zile, onChange }: Props) {
 
   return (
     <div className="space-y-3">
-      <ScreenshotUpload dates={dates} zile={zile} onApply={applyScreenshotData} />
+      <RideImport dates={dates} onApplyDay={applyRideDay} />
 
       <div className="rounded-md border-l-4 border-accent bg-accent/10 p-3 text-xs sm:text-sm">
         Poți corecta oricând valorile manual. OCR-ul este doar un ajutor pentru completarea datelor din screenshot-uri.

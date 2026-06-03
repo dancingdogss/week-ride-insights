@@ -32,7 +32,7 @@ export function ZiForm({ initial, onSave, onCancel }: Props) {
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!inInterval(data)) return toast.error("Data trebuie în intervalul 10–17 mai 2026.");
+    if (!inInterval(data)) return toast.error("Data trebuie în intervalul 10–16 mai 2026.");
     if (!platforma) return toast.error("Selectează platforma.");
     const nums = { brut: +brut, curse: +curse, ore: +ore, combustibil: +combustibil, km: km ? +km : undefined };
     if ([nums.brut, nums.curse, nums.ore, nums.combustibil].some((n) => isNaN(n) || n < 0))

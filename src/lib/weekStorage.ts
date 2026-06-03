@@ -23,7 +23,7 @@ export const CONFIG = {
   kmPerCursa: 1.5,
   reperCombustibil: 500,
   weekStart: "2026-05-10",
-  weekEnd: "2026-05-17",
+  weekEnd: "2026-05-16", // 7-day week: 10–16 May 2026 (inclusive)
 };
 
 const KEY = "analiza-saptamana-uber-bolt-v1";
