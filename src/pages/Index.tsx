@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +23,13 @@ const Index = () => {
   const [zile, setZile] = useState<ZiData[]>(() => loadZile());
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { saveZile(zile); }, [zile]);
+  // Single source of truth for mutating the week: update React state AND persist
+  // to localStorage synchronously, in the same action. This guarantees imported
+  // (and manual) changes survive a page refresh without relying on effect timing.
+  const commitZile = useCallback((next: ZiData[]) => {
+    setZile(next);
+    saveZile(next);
+  }, []);
 
   function exportJson() {
     const blob = new Blob([JSON.stringify(zile, null, 2)], { type: "application/json" });
@@ -42,7 +48,7 @@ const Index = () => {
         const parsed = JSON.parse(String(r.result));
         const zileImportate = parseZile(parsed);
         if (!zileImportate) throw new Error();
-        setZile(zileImportate);
+        commitZile(zileImportate);
         toast.success("Date importate.");
       } catch {
         toast.error("Fișier JSON invalid.");
@@ -90,7 +96,7 @@ const Index = () => {
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           </TabsList>
           <TabsContent value="tabel" className="mt-4">
-            <SaptamanaTable zile={zile} onChange={setZile} />
+            <SaptamanaTable zile={zile} onChange={commitZile} />
           </TabsContent>
           <TabsContent value="dashboard" className="mt-4">
             <Dashboard zile={zile} />

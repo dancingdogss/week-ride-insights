@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Eraser } from "lucide-react";
 import { RideDayApply, RideImport } from "@/components/RideImport";
-import { CONFIG, Platforma, Sursa, ZiData, calculZi, inInterval, lei } from "@/lib/weekStorage";
+import { CONFIG, Platforma, Sursa, ZiData, applyImportedDay, calculZi, inInterval, lei } from "@/lib/weekStorage";
 
 function datesOfWeek(): string[] {
   const out: string[] = [];
@@ -73,15 +73,9 @@ export function SaptamanaTable({ zile, onChange }: Props) {
   function applyRideDay(day: RideDayApply) {
     // Never write a day outside the configured week (e.g. an OCR'd 2026-05-17).
     if (!inInterval(day.data)) return;
-    const row = rows.find((item) => item.data === day.data) ?? makeBlank(day.data);
-    // Merge ride-level totals; preserve manually entered hours / km / fuel.
-    update(row, {
-      platforma: day.platforma,
-      brut: day.brut,
-      curse: day.curse,
-      sursa: "Screenshot",
-      observatii: day.observatii ?? row.observatii,
-    });
+    // Pure merge into the SAME zile array the table renders; onChange persists it
+    // immediately (see Index). Preserves manually entered hours / km / fuel.
+    onChange(applyImportedDay(zile, day));
   }
 
   const num = (v: number | undefined) => (v === undefined || v === 0 ? "" : String(v));
