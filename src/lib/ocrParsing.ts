@@ -1,4 +1,5 @@
 import { CONFIG, Platforma, inInterval } from "@/lib/weekStorage";
+import { MONTHS, formatDate, normalize, parseNumber, sanitizeOcr } from "@/lib/ocrText";
 
 // ─── Limits (shared, single source of truth) ──────────────────────────────────
 
@@ -32,63 +33,12 @@ export interface ScreenshotExtract {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const MONTHS: Record<string, number> = {
-  ianuarie: 1, februarie: 2, martie: 3, aprilie: 4, mai: 5, iunie: 6,
-  iulie: 7, august: 8, septembrie: 9, octombrie: 10, noiembrie: 11, decembrie: 12,
-};
-
 const GROSS_KEYWORDS_STRONG = ["castig", "incasari", "venit", "earnings", "fare"];
 const GROSS_KEYWORDS_WEAK   = ["total", "income", "suma"];
 const HOURS_KEYWORDS        = ["online", "timp", "ore", "hours", "active"];
 const RIDES_KEYWORDS        = ["curse", "calatorii", "rides", "trips", "comenzi"];
 
 // ─── Generic helpers ──────────────────────────────────────────────────────────
-
-/**
- * Fixes common OCR substitution artifacts before any parsing takes place:
- * - Smart/curly quotes → straight apostrophe / quote
- * - Typographic ligatures (fi, fl) → plain ASCII
- * - Pipe character between digits → digit 1 (e.g. "24|5" → "2415")
- * - Zero-width / BOM characters stripped
- * - Degree symbol that OCR sometimes places near digit separators
- */
-function sanitizeOcr(text: string): string {
-  return text
-    .replace(/[‘’ʼ]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/ﬁ/g, "fi")
-    .replace(/ﬂ/g, "fl")
-    .replace(/(?<=\d)\|(?=\d)/g, "1")
-    .replace(/[​‌‍﻿]/g, "")
-    .replace(/°/g, "");
-}
-
-function normalize(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase();
-}
-
-/**
- * Parses a Romanian/international number string to a float.
- * "245,50" → 245.5  |  "1.245,50" → 1245.5  |  "245.50" → 245.5
- * Never turns "123,63" into 12363.
- */
-function parseNumber(raw: string): number | undefined {
-  const cleaned = raw.replace(/\s+/g, "");
-  if (!cleaned) return undefined;
-  const lastComma = cleaned.lastIndexOf(",");
-  const lastDot   = cleaned.lastIndexOf(".");
-  const decimal   = lastComma > lastDot ? "," : lastDot > -1 ? "." : "";
-  const normalized = decimal
-    ? cleaned
-        .replace(new RegExp(`\\${decimal === "," ? "." : ","}`, "g"), "")
-        .replace(decimal, ".")
-    : cleaned.replace(/[,.]/g, "");
-  const value = Number(normalized);
-  return Number.isFinite(value) && value >= 0 ? value : undefined;
-}
 
 /** Count exact whole-word occurrences of `word` in normalized `text`. */
 function countWord(text: string, word: string): number {
@@ -258,10 +208,6 @@ function findRides(lines: string[]): ExtractedField<number> {
 
 // ─── Date ─────────────────────────────────────────────────────────────────────
 // Rule: only accept dates inside the configured week. Never default to day one.
-
-function formatDate(year: number, month: number, day: number): string {
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
 
 function findDate(text: string): ExtractedField<string> {
   const n           = normalize(text);
