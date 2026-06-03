@@ -91,6 +91,42 @@ export function clearZile() {
   localStorage.removeItem(KEY);
 }
 
+/** Totals for one day produced by the screenshot import (RideImport). */
+export interface ImportedDay {
+  data: string; // YYYY-MM-DD
+  platforma: Platforma;
+  brut: number;
+  curse: number;
+  observatii?: string;
+}
+
+/**
+ * Merges an imported day's totals into the week array, matching the existing
+ * row by date. Pure (no React, no storage) so it can be unit-tested and reused.
+ * - Existing day: overwrites platform/brut/curse/source/notes but PRESERVES
+ *   manually entered hours, km and fuel, and keeps the original id.
+ * - New day: appends a fresh record keyed by date.
+ * The returned array is always a new reference (safe for setState).
+ */
+export function applyImportedDay(zile: ZiData[], day: ImportedDay): ZiData[] {
+  const existing = zile.find((z) => z.data === day.data);
+  const merged: ZiData = {
+    id: existing?.id ?? day.data,
+    data: day.data,
+    platforma: day.platforma,
+    brut: day.brut,
+    curse: day.curse,
+    ore: existing?.ore ?? 0,
+    km: existing?.km,
+    combustibil: existing?.combustibil ?? 0,
+    observatii: day.observatii ?? existing?.observatii,
+    sursa: "Screenshot",
+  };
+  return existing
+    ? zile.map((z) => (z.data === day.data ? merged : z))
+    : [...zile, merged];
+}
+
 export function calculZi(z: ZiData) {
   const comPlatRate = z.platforma === "Uber" ? CONFIG.comisionUber : CONFIG.comisionBolt;
   const comPlat = z.brut * comPlatRate;
