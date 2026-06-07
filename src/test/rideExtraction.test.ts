@@ -204,39 +204,39 @@ describe("individual ride extraction", () => {
     const r = extractFromScreenshot(INDIVIDUAL);
     expect(r.rides[0].date).toBe("2026-05-17");
     expect(r.rides[0].time).toBe("14:00");
-    // 17 May is outside the 10–16 May week, so it must be flagged.
-    expect(r.rides[0].outsideWeek).toBe(true);
-    expect(r.rides[0].needsReview).toBe(true);
+    // 17 May is now inside the 11–17 May week — valid, not flagged.
+    expect(r.rides[0].outsideWeek).toBe(false);
+    expect(r.rides[0].needsReview).toBe(false);
   });
 });
 
-// ─── Week boundary enforcement (10–16 May 2026) ───────────────────────────────
+// ─── Week boundary enforcement (11–17 May 2026) ───────────────────────────────
 
 const mkIndividual = (header: string, amount: string) =>
   `${header}\nfm Bolt | 3km | 7 min\nPlata\nClientul a platit\nPlata in numerar   ${amount}`;
 
 describe("week boundary enforcement", () => {
-  it("flags a ride dated outside the week (17 mai) and needs review", () => {
-    const r = extractFromScreenshot(mkIndividual("17 mai, 10:00", "25,00 lei"));
-    expect(r.rides[0].date).toBe("2026-05-17");
+  it("flags a ride dated outside the week (10 mai) and needs review", () => {
+    const r = extractFromScreenshot(mkIndividual("10 mai, 10:00", "25,00 lei"));
+    expect(r.rides[0].date).toBe("2026-05-10");
     expect(r.rides[0].outsideWeek).toBe(true);
     expect(r.rides[0].needsReview).toBe(true);
   });
 
-  it("keeps the last day of the week (16 mai) inside the week", () => {
-    const r = extractFromScreenshot(mkIndividual("16 mai, 10:00", "20,00 lei"));
-    expect(r.rides[0].date).toBe("2026-05-16");
+  it("keeps the last day of the week (17 mai) inside the week", () => {
+    const r = extractFromScreenshot(mkIndividual("17 mai, 10:00", "20,00 lei"));
+    expect(r.rides[0].date).toBe("2026-05-17");
     expect(r.rides[0].outsideWeek).toBe(false);
   });
 
   it("aggregates out-of-week rides into a separate flagged bucket, after in-week days", () => {
     const rides = [
-      ...extractFromScreenshot(mkIndividual("16 mai, 10:00", "20,00 lei")).rides,
-      ...extractFromScreenshot(mkIndividual("17 mai, 10:00", "25,00 lei")).rides,
+      ...extractFromScreenshot(mkIndividual("17 mai, 10:00", "20,00 lei")).rides,
+      ...extractFromScreenshot(mkIndividual("10 mai, 10:00", "25,00 lei")).rides,
     ];
     const days = aggregateByDate(rides);
-    const inWeek = days.find((d) => d.date === "2026-05-16");
-    const outside = days.find((d) => d.date === "2026-05-17");
+    const inWeek = days.find((d) => d.date === "2026-05-17");
+    const outside = days.find((d) => d.date === "2026-05-10");
     expect(inWeek?.outsideWeek).toBe(false);
     expect(inWeek?.gross).toBeCloseTo(20);
     expect(outside?.outsideWeek).toBe(true);

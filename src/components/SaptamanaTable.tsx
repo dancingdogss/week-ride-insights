@@ -71,7 +71,7 @@ export function SaptamanaTable({ zile, onChange }: Props) {
   }
 
   function applyRideDay(day: RideDayApply) {
-    // Never write a day outside the configured week (e.g. an OCR'd 2026-05-17).
+    // Never write a day outside the configured week (e.g. an OCR'd 2026-05-10).
     if (!inInterval(day.data)) return;
     // Pure merge into the SAME zile array the table renders; onChange persists it
     // immediately (see Index). Preserves manually entered hours / km / fuel.

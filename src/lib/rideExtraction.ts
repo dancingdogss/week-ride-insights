@@ -99,7 +99,7 @@ function isOutsideWeek(date: string | undefined): boolean {
   return date !== undefined && !inInterval(date);
 }
 
-/** Human label for the configured week, e.g. "10–16 mai 2026" boundaries in ISO. */
+/** Human label for the configured week, e.g. "11–17 mai 2026" boundaries in ISO. */
 function weekBoundsLabel(): string {
   return `${CONFIG.weekStart} – ${CONFIG.weekEnd}`;
 }

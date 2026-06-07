@@ -423,7 +423,7 @@ export function RideImport({ dates, onApplyDay }: Props) {
                   )}
                   {isOutside && (
                     <p className="text-[11px] text-orange-600">
-                      Curse în afara săptămânii 10–16 mai 2026 — nu se adună la total și nu pot fi
+                      Curse în afara săptămânii 11–17 mai 2026 — nu se adună la total și nu pot fi
                       aplicate. Dacă data a fost citită greșit, reasignează-le unei zile din interval.
                     </p>
                   )}

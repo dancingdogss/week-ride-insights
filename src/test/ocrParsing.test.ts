@@ -7,7 +7,7 @@ const UBER = `
   245,63 lei
   Trips 14
   Online 6h 30min
-  10 mai 2026
+  14 mai 2026
 `;
 
 const BOLT = `
@@ -154,7 +154,7 @@ describe("hours parsing & limits", () => {
 
 describe("date parsing", () => {
   it("parses named Romanian date in-interval", () => {
-    expect(parseScreenshotText(UBER).data.value).toBe("2026-05-10");
+    expect(parseScreenshotText(UBER).data.value).toBe("2026-05-14");
   });
 
   it("parses numeric date 12.05.2026", () => {
@@ -266,7 +266,7 @@ describe("realistic full screenshots", () => {
     expect(r.brut.value).toBe(245.63);
     expect(r.curse.value).toBe(14);
     expect(r.ore.value).toBeCloseTo(6.5);
-    expect(r.data.value).toBe("2026-05-10");
+    expect(r.data.value).toBe("2026-05-14");
   });
 
   it("Bolt full", () => {

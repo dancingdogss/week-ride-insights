@@ -36,7 +36,7 @@ const Index = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `saptamana-10-16-mai-2026.json`;
+    a.download = `saptamana-11-17-mai-2026.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -68,7 +68,7 @@ const Index = () => {
       <header className="border-b bg-card">
         <div className="container mx-auto max-w-2xl px-4 py-4">
           <h1 className="text-xl font-bold sm:text-2xl">Analiză săptămână Uber/Bolt</h1>
-          <p className="text-xs text-muted-foreground sm:text-sm">10 mai 2026 – 16 mai 2026 · {CONFIG.masina}</p>
+          <p className="text-xs text-muted-foreground sm:text-sm">11 mai 2026 – 17 mai 2026 · {CONFIG.masina}</p>
         </div>
       </header>
 
@@ -86,7 +86,7 @@ const Index = () => {
         </Card>
 
         <div className="rounded-md border-l-4 border-accent bg-accent/10 p-3 text-xs sm:text-sm">
-          <p>Analiza este bazată doar pe datele introduse pentru săptămâna 10–16 mai 2026. Nu este o proiecție lunară.</p>
+          <p>Analiza este bazată doar pe datele introduse pentru săptămâna 11–17 mai 2026. Nu este o proiecție lunară.</p>
           <p className="mt-1">Combustibilul este introdus manual. Kilometrii până la client sunt estimați la 1,5 km pentru fiecare cursă.</p>
         </div>
 
